@@ -12,7 +12,7 @@ export default function Footer() {
 
             {/* Bottom-left: WeChat QR placeholder + small logo */}
             <div className="mt-8 flex items-center gap-4">
-              <img src="https://static.notiontheme.com/qr_code.jpg" alt="微信群二维码" className="w-28 rounded-xl ring-1 ring-black/5" />
+              <img src="https://static.2notion.com/clipno/theme_qrcode.jpg" alt="微信群二维码" className="w-28 rounded-xl ring-1 ring-black/5" />
             </div>
           </div>
 
