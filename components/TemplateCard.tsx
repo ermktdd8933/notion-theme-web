@@ -27,14 +27,14 @@ export default function TemplateCard({ template, onClick }: TemplateCardProps) {
         {/* Image Section - 灰色占满卡片上方（卡片内部） */}
         <div className="relative -mx-5 -mt-5 mb-5 bg-gray-100 pt-6 px-6 pb-2 rounded-t-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
           <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden ring-1 ring-black/5 bg-white">
-            <Image 
+            <Image
               src={template.cover_url || template.coverImage || 'https://file.notion.so/f/f/d01f9e1b-37be-4e62-ba09-3e4835a67760/69c56ed3-d5bb-40f0-8ad1-7300e4d20bd0/image.png?table=block&id=23a73415-a279-8092-a553-e50eab75d696&spaceId=d01f9e1b-37be-4e62-ba09-3e4835a67760&expirationTimestamp=1756303200000&signature=hehVsiY6qKJCW9XbbroHPwpMuGTfIfFx9ovrxOKfCYQ&downloadName=image.png'}
               alt={template.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-contain object-center transition-transform duration-300 group-hover:scale-[1.01] bg-white"
               loading="lazy"
-              quality={85}
+              unoptimized
             />
           </div>
         </div>

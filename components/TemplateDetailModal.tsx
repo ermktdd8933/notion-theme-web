@@ -264,7 +264,7 @@ export default function TemplateDetailModal({ open, templateId, onOpenChange }: 
                       sizes="(max-width: 1024px) 100vw, 50vw"
                       className="object-contain object-center"
                       priority
-                      quality={90}
+                      unoptimized
                       style={{ maxWidth: '100%', maxHeight: '100%' }}
                     />
                     {/* 左右切换按钮 */}
@@ -326,7 +326,7 @@ export default function TemplateDetailModal({ open, templateId, onOpenChange }: 
                         sizes="80px"
                         className="object-cover"
                         loading="lazy"
-                        quality={75}
+                        unoptimized
                       />
                     </button>
                   ))}
