@@ -1,0 +1,15 @@
+# Notion模板市场（notiontheme.com）
+
+> Notion模板市场是中国最大的 Notion 模板分享平台，为个人和企业提供高质量的 Notion 模板解决方案，覆盖生产力、项目管理、笔记、工作流等场景，帮助提升工作效率和组织能力。
+
+## 这是什么
+
+- 中文 Notion 模板聚合与分享平台
+- 收录覆盖项目管理、笔记、生产力、工作流等多种用途的模板
+- 支持浏览、查看模板详情，以及用户提交模板
+
+## 链接
+
+- 官网：https://notiontheme.com/
+- 模板提交：https://notiontheme.com/submissions
+- 隐私政策：https://notiontheme.com/privacy
