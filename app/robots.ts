@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const SITE_URL = 'https://notiontheme.com'
+const SITE_URL = 'https://www.notiontheme.com'
 
 export default function robots(): MetadataRoute.Robots {
   return {

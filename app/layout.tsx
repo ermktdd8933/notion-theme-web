@@ -8,7 +8,7 @@ import { AuthProvider } from '@/lib/authContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const SITE_URL = 'https://notiontheme.com'
+const SITE_URL = 'https://www.notiontheme.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -50,15 +50,15 @@ const jsonLd = {
     {
       '@type': 'WebSite',
       name: 'Notion模板市场',
-      url: 'https://notiontheme.com/',
+      url: 'https://www.notiontheme.com/',
       inLanguage: 'zh-CN',
       description: '中国最大的Notion模板分享平台，为个人和企业提供高质量的模板解决方案。',
     },
     {
       '@type': 'Organization',
       name: 'Notion模板市场',
-      url: 'https://notiontheme.com/',
-      logo: 'https://notiontheme.com/logo.png',
+      url: 'https://www.notiontheme.com/',
+      logo: 'https://www.notiontheme.com/logo.png',
     },
   ],
 }
