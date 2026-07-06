@@ -115,12 +115,26 @@ export default async function Home() {
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-6">常见问题</h2>
-          <div className="space-y-6">
-            {faqs.map(f => (
-              <div key={f.q}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{f.q}</h3>
-                <p className="text-gray-600 leading-relaxed">{f.a}</p>
-              </div>
+          <div className="space-y-3">
+            {faqs.map((f, i) => (
+              <details
+                key={f.q}
+                open={i === 0}
+                className="group rounded-xl border border-gray-200 bg-white px-5 py-4"
+              >
+                <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center justify-between gap-4">
+                  <h3 className="text-base font-semibold text-gray-900">{f.q}</h3>
+                  <svg
+                    className="w-4 h-4 shrink-0 text-gray-400 transition-transform group-open:rotate-180"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
+                  </svg>
+                </summary>
+                <p className="text-gray-600 leading-relaxed mt-3">{f.a}</p>
+              </details>
             ))}
           </div>
         </div>

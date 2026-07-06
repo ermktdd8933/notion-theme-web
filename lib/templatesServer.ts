@@ -6,18 +6,27 @@ import type { Category, Template, TemplateImage } from '@/types'
 // 注意：这里返回的数据会被渲染进可缓存的 HTML，
 // 因此绝不包含 template_url，也不生成有时效的 openUrl（sealUrl TTL 仅 10 分钟）。
 
-export const getTemplatesPage = cache(async (page = 1, pageSize = 12): Promise<{ templates: Template[]; total: number }> => {
-  const { data, error } = await supabaseAdmin.rpc('rpc_get_templates', {
-    p_page: page,
-    p_page_size: pageSize,
-    p_search_q: null,
-    p_category_ids: null,
-  })
-
-  if (error || !data) {
-    console.error('[templatesServer] rpc_get_templates error:', error)
-    return { templates: [], total: 0 }
+// 拉取失败时必须抛错而不是返回空列表：
+// 构建期抛错让部署失败（避免把空首页烤进静态 HTML），
+// 运行期 ISR 再生抛错则 Next 会继续提供旧缓存页面。
+async function rpcTemplatesWithRetry(page: number, pageSize: number) {
+  let lastError: unknown
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data, error } = await supabaseAdmin.rpc('rpc_get_templates', {
+      p_page: page,
+      p_page_size: pageSize,
+      p_search_q: null,
+      p_category_ids: null,
+    })
+    if (!error && data) return data
+    lastError = error
+    console.error(`[templatesServer] rpc_get_templates attempt ${attempt + 1} failed:`, error)
   }
+  throw new Error(`rpc_get_templates failed: ${JSON.stringify(lastError)}`)
+}
+
+export const getTemplatesPage = cache(async (page = 1, pageSize = 12): Promise<{ templates: Template[]; total: number }> => {
+  const data = await rpcTemplatesWithRetry(page, pageSize)
 
   const templates: Template[] = Array.isArray(data.templates)
     ? data.templates.map((t: any) => {
