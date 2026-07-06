@@ -12,9 +12,12 @@ const SITE_URL = 'https://www.notiontheme.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Notion模板市场 - 中国最大的Notion模板站',
-  description: '中国最大的Notion模板分享平台，为个人和企业提供高质量的模板解决方案，提升工作效率和组织能力。',
-  keywords: 'Notion, 模板, 生产力, 项目管理, 笔记, 工作流, 中文',
+  title: {
+    default: 'Notion模板市场 - 500+ 免费中文 Notion 模板与主题下载',
+    template: '%s | Notion模板市场',
+  },
+  description: '中国最大的中文 Notion 模板分享平台，收录 500+ 免费 Notion 模板与 Notion 主题，覆盖项目管理、笔记、习惯打卡、知识库等场景，一键复制到你的 Notion 工作区。',
+  keywords: 'Notion模板, Notion主题, Notion中文模板, Notion免费模板, 生产力, 项目管理, 笔记, 工作流',
   authors: [{ name: 'Notion模板市场团队' }],
   alternates: { canonical: '/' },
   robots: {
@@ -28,8 +31,8 @@ export const metadata: Metadata = {
     apple: '/logo.png',
   },
   openGraph: {
-    title: 'Notion模板市场',
-    description: '中国最大的Notion模板集合',
+    title: 'Notion模板市场 - 500+ 免费中文 Notion 模板与主题下载',
+    description: '中国最大的中文 Notion 模板分享平台，500+ 免费模板一键复制使用。',
     type: 'website',
     locale: 'zh_CN',
     url: SITE_URL,

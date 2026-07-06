@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Template } from '@/types'
 import Image from 'next/image'
+import Link from 'next/link'
 import StarRating from '@/components/StarRating'
 
 interface TemplateCardProps {
@@ -10,8 +11,11 @@ interface TemplateCardProps {
 }
 
 export default function TemplateCard({ template, onClick }: TemplateCardProps) {
-  const handleClick = () => {
+  // 卡片是真实链接（/templates/[id]），保证搜索引擎可抓取；
+  // 普通点击仍拦截为弹窗交互，新标签/爬虫则进入详情页
+  const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
+      e.preventDefault()
       onClick(template.id)
     }
   }
@@ -19,9 +23,9 @@ export default function TemplateCard({ template, onClick }: TemplateCardProps) {
   const isFree = !priceValue || priceValue === 0
 
   return (
-    <Card 
+    <Link href={`/templates/${template.id}`} prefetch={false} onClick={handleClick} className="block">
+    <Card
       className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 bg-white overflow-hidden cursor-pointer"
-      onClick={handleClick}
     >
       <CardContent className="p-5">
         {/* Image Section - 灰色占满卡片上方（卡片内部） */}
@@ -61,5 +65,6 @@ export default function TemplateCard({ template, onClick }: TemplateCardProps) {
         </div>
       </CardContent>
     </Card>
+    </Link>
   )
 }

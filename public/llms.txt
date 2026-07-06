@@ -11,5 +11,16 @@
 ## 链接
 
 - 官网：https://www.notiontheme.com/
+- 模板库（全部模板列表）：https://www.notiontheme.com/templates
 - 模板提交：https://www.notiontheme.com/submissions
 - 隐私政策：https://www.notiontheme.com/privacy
+
+## 配套工具
+
+- Clipno（Notion 网页剪藏工具，一键把网页保存到 Notion）：https://clipno.app
+
+## 常见问题
+
+- 模板均可通过 Notion 的「复制 / Duplicate」功能一键复制到自己的工作区
+- 绝大多数模板免费，少数创作者定价的模板会标注价格
+- 每个模板都有独立详情页：https://www.notiontheme.com/templates/{id}

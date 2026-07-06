@@ -21,6 +21,7 @@ export default function Footer() {
             <div>
               <h3 className="text-gray-900 font-semibold mb-4">工具</h3>
               <ul className="space-y-3 text-sm">
+                <li><a className="text-gray-600 hover:text-gray-900" href="https://clipno.app" target="_blank" rel="noreferrer">Clipno - Notion 网页剪藏</a></li>
                 <li><a className="text-gray-600 hover:text-gray-900" href="https://templatestranslate.com" target="_blank" rel="noreferrer">Notion 模版翻译</a></li>
                 <li><a className="text-gray-600 hover:text-gray-900" href="https://rednote.2notion.com" target="_blank" rel="noreferrer">小红书同步到 Notion</a></li>
                 <li><a className="text-gray-600 hover:text-gray-900" href="https://weread.2notion.com" target="_blank" rel="noreferrer">微信读书同步到 Notion</a></li>
@@ -30,8 +31,8 @@ export default function Footer() {
             <div>
               <h3 className="text-gray-900 font-semibold mb-4">产品</h3>
               <ul className="space-y-3 text-sm">
-                <li><a className="text-gray-600 hover:text-gray-900" href="#templates">模板库</a></li>
-                <li><a className="text-gray-600 hover:text-gray-900" href="#">提交模板</a></li>
+                <li><a className="text-gray-600 hover:text-gray-900" href="/templates">模板库</a></li>
+                <li><a className="text-gray-600 hover:text-gray-900" href="/submissions">提交模板</a></li>
                 <li><a className="text-gray-600 hover:text-gray-900" href="#">更新日志</a></li>
               </ul>
             </div>

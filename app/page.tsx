@@ -1,142 +1,73 @@
-'use client'
-
-import { useEffect, useMemo, useState } from 'react'
-import TemplateCard from '@/components/TemplateCard'
-import TemplateDetailModal from '@/components/TemplateDetailModal'
-import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Category, Template } from '@/types'
-import { supabaseClient } from '@/lib/supabaseClient'
+import HomeClient from '@/components/HomeClient'
+import { getCategories, getTemplatesPage } from '@/lib/templatesServer'
 
-export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [total, setTotal] = useState(0)
-  const [categories, setCategories] = useState<Category[]>([])
-  const templatesPerPage = 12
-  const [selectedParentId, setSelectedParentId] = useState<string>('all')
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
-  const [detailModalOpen, setDetailModalOpen] = useState(false)
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
+// ISR：每小时重新生成，保证首屏模板列表进入 HTML（可被搜索引擎与 AI 爬虫抓取）
+export const revalidate = 3600
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 获取用户 session token（可选，未登录也可以查看模板）
-        const { data: { session } } = await supabaseClient.auth.getSession()
-        const token = session?.access_token
+const SITE_URL = 'https://www.notiontheme.com'
 
-        const params = new URLSearchParams({
-          page: String(currentPage),
-          pageSize: String(templatesPerPage),
-        })
-        // pass server-side filters
-        if (searchQuery.trim()) params.set('q', searchQuery.trim())
-        // Category filtering: child sends childId directly; parent sends parentId + isParent flag
-        if (selectedChildId) {
-          params.set('categoryId', selectedChildId)
-        } else if (selectedParentId && selectedParentId !== 'all') {
-          params.set('categoryId', selectedParentId)
-          params.set('isParent', 'true')
-        }
+const faqs = [
+  {
+    q: '什么是 Notion 模板？',
+    a: 'Notion 模板是预先搭建好的 Notion 页面或数据库结构，涵盖笔记、项目管理、习惯打卡、个人主页、知识库等场景。使用模板可以跳过从零搭建的过程，一键复制即可开始使用。',
+  },
+  {
+    q: '如何使用这里的 Notion 模板？',
+    a: '打开模板详情页，点击「获取模板」跳转到 Notion 页面，然后点击右上角的「复制 / Duplicate」按钮，模板就会复制到你自己的 Notion 工作区，可以自由修改。',
+  },
+  {
+    q: '这些中文 Notion 模板是免费的吗？',
+    a: '站内绝大多数模板都可以免费复制使用，模板卡片上会标注 Free；少数由创作者定价的付费模板会明确显示价格。',
+  },
+  {
+    q: 'Notion 模板和 Notion 主题有什么区别？',
+    a: 'Notion 本身不支持传统意义上的「主题换肤」，大家常说的 Notion 主题通常指风格化的页面模板（如极简、暗色、美式复古等排版风格）。本站的模板库同时覆盖功能型模板与风格化主题模板。',
+  },
+  {
+    q: '我可以提交自己制作的 Notion 模板吗？',
+    a: '可以。通过「提交模板」页面上传你的模板链接、封面和介绍，审核通过后就会展示在模板市场中，供所有用户浏览和复制。',
+  },
+]
 
-        // 构建请求头，如果有 token 就带上，没有就不带
-        const headers: HeadersInit = {}
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
+export default async function Home() {
+  const [{ templates, total }, categories] = await Promise.all([
+    getTemplatesPage(1, 12),
+    getCategories(),
+  ])
 
-        const [tplRes, catRes] = await Promise.all([
-          fetch(`/api/templates?${params.toString()}`, {
-            headers
-          }),
-          fetch('/api/categories')
-        ])
-
-        // 检查模板 API 响应
-        if (!tplRes.ok) {
-          const errorData = await tplRes.json()
-          console.error('Failed to fetch templates:', errorData)
-          setTemplates([])
-          setTotal(0)
-          return
-        }
-
-        const tplJson = await tplRes.json()
-        const catJson = await catRes.json()
-        setTemplates(tplJson.templates ?? [])
-        setTotal(tplJson.total ?? 0)
-        setCategories(catJson.categories ?? [])
-      } catch (e) {
-        console.error('Failed to fetch data', e)
-        setTemplates([])
-        setTotal(0)
-      }
-    }
-    fetchData()
-  }, [currentPage, searchQuery, selectedParentId, selectedChildId])
-
-  // Derive parent/children lists
-  const parentCategories = useMemo(() => (categories ?? []).filter(c => !c.parent_id), [categories])
-  const allChildren = useMemo(() => (categories ?? []).filter(c => !!c.parent_id), [categories])
-  const visibleChildren = useMemo(() => {
-    if (selectedParentId === 'all') return allChildren
-    return allChildren.filter(c => c.parent_id === selectedParentId)
-  }, [allChildren, selectedParentId])
-
-  // Filter templates based on search and category selection
-  const filteredTemplates = useMemo(() => {
-    return templates.filter(template => {
-      const matchesSearch = searchQuery === '' || 
-        template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (template.description ?? '').toLowerCase().includes(searchQuery.toLowerCase())
-
-      let matchesCategory = true
-      if (selectedChildId) {
-        matchesCategory = (template.categoryIds ?? []).includes(selectedChildId)
-      } else if (selectedParentId !== 'all') {
-        const childIds = allChildren.filter(c => c.parent_id === selectedParentId).map(c => c.id)
-        const setIds = new Set(template.categoryIds ?? [])
-        matchesCategory = childIds.some(id => setIds.has(id))
-      }
-
-      return matchesSearch && matchesCategory
-    })
-  }, [searchQuery, selectedParentId, selectedChildId, templates, allChildren])
-
-  // Calculate pagination
-  const totalPages = Math.max(1, Math.ceil((total || 0) / templatesPerPage))
-  const currentTemplates = filteredTemplates
-
-  // Reset to first page when filters change
-  const handleSelectParent = (parentId: string) => {
-    setSelectedParentId(parentId)
-    setSelectedChildId(null)
-    setSelectedCategory(parentId)
-    setCurrentPage(1)
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'ItemList',
+        name: '最新中文 Notion 模板',
+        numberOfItems: templates.length,
+        itemListElement: templates.map((t, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: t.title,
+          url: `${SITE_URL}/templates/${t.id}`,
+        })),
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: faqs.map(f => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+      },
+    ],
   }
-
-  const handleSelectChild = (childId: string) => {
-    setSelectedChildId(childId)
-    setSelectedCategory(childId)
-    setCurrentPage(1)
-  }
-
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query)
-    setCurrentPage(1)
-  }
-
-  const topLevelCategories = useMemo(() => {
-    return [{ id: 'all', name: '全部' } as any].concat(parentCategories)
-  }, [parentCategories])
 
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Header Section */}
       <div className="bg-white py-6">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -144,222 +75,56 @@ export default function Home() {
           <Badge variant="secondary" className="mb-4 text-sm px-3 py-1 bg-gray-100 text-gray-700 border-0">
             ✨ 欢迎提交你的Notion模板
           </Badge>
-          
+
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            超过500+的中文Notion免费模版
+            超过{total > 0 ? total : 500}+的中文Notion免费模版
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            中国最大的Notion模板市场
+            中国最大的 Notion 模板市场，覆盖 Notion 主题、笔记、项目管理、习惯打卡、知识库等场景，全部支持一键复制到你的工作区
           </p>
         </div>
       </div>
 
-      {/* Search Section */}
-      <div className="py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-md mx-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                type="text"
-                placeholder="搜索模板..."
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 pr-4 py-3 text-base bg-white border-gray-300"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <HomeClient
+        initialTemplates={templates}
+        initialTotal={total}
+        initialCategories={categories}
+      />
 
-      {/* Category Filter Section */}
-      <div className="py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* First Row - Parents */}
-          <div className="flex flex-wrap gap-2 justify-center mb-2">
-            {topLevelCategories.slice(0, 9).map((category: any) => (
-              <Button
-                key={category.id}
-                variant={selectedParentId === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSelectParent(category.id)}
-                className={`px-4 py-2 ${
-                  selectedParentId === category.id 
-                    ? 'bg-gray-900 text-white hover:bg-gray-800' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-          
-          {/* Second Row - Children: default show all children; when a parent is selected, show only its children */}
-          <div className="flex flex-wrap gap-2 justify-center ml-8">
-            {(selectedParentId === 'all' ? allChildren : visibleChildren).map((category: any) => (
-              <Button
-                key={category.id}
-                variant={selectedChildId === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSelectChild(category.id)}
-                className={`px-4 py-2 ${
-                  selectedChildId === category.id 
-                    ? 'bg-gray-900 text-white hover:bg-gray-800' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Templates Section */}
-      <div className="py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Results Count */}
-          <div className="mb-6">
-            <p className="text-gray-600">
-              显示 {(currentPage - 1) * templatesPerPage + 1}-{Math.min(currentPage * templatesPerPage, total)} 个，共 {total} 个模板
+      {/* SEO / GEO 内容区：服务端渲染的站点介绍与常见问题 */}
+      <section className="border-t border-gray-100 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            中文 Notion 模板与 Notion 主题下载站
+          </h2>
+          <div className="text-gray-600 leading-relaxed space-y-3 mb-12">
+            <p>
+              Notion模板市场（NotionTheme）是面向中文用户的 Notion 模板聚合平台，收录了 {total > 0 ? total : 500}+ 个免费与付费的中文 Notion 模板，
+              涵盖项目管理、任务清单、读书笔记、习惯打卡、个人 OKR、知识库、简历、账本等常见场景，
+              也包括极简、暗色等风格化的 Notion 主题模板。
+            </p>
+            <p>
+              每个模板都提供预览图和详细介绍，点击「获取模板」即可跳转 Notion 一键复制（Duplicate）到自己的工作区，无需安装任何插件。
+              如果你是模板创作者，也欢迎通过提交入口分享你的作品。
+            </p>
+            <p>
+              搭建好模板之后，推荐搭配我们的网页剪藏工具{' '}
+              <a href="https://clipno.app" target="_blank" rel="noreferrer" className="underline hover:text-gray-900">Clipno</a>{' '}
+              使用：浏览网页时一键把文章、灵感保存进 Notion，让模板里的知识库和收集箱真正运转起来。
             </p>
           </div>
 
-          {/* Templates Grid */}
-          {currentTemplates.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-              {currentTemplates.map((template) => (
-                <TemplateCard 
-                  key={template.id} 
-                  template={template}
-                  onClick={(templateId) => {
-                    setSelectedTemplateId(templateId)
-                    setDetailModalOpen(true)
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="text-gray-400 mb-4">
-                <Search className="h-16 w-16 mx-auto" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">常见问题</h2>
+          <div className="space-y-6">
+            {faqs.map(f => (
+              <div key={f.q}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{f.q}</h3>
+                <p className="text-gray-600 leading-relaxed">{f.a}</p>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                没有找到匹配的模板
-              </h3>
-              <p className="text-gray-600">
-                请尝试调整搜索关键词或分类筛选
-              </p>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center space-x-4">
-              {/* Previous Button */}
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className={`text-sm ${
-                  currentPage === 1 
-                    ? 'text-gray-400 cursor-not-allowed' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                &lt; 上一页
-              </button>
-              
-              {/* Page Numbers */}
-              <div className="flex items-center space-x-2">
-                {/* First page */}
-                <button
-                  onClick={() => setCurrentPage(1)}
-                  className={`px-3 py-1 rounded-md text-sm ${
-                    currentPage === 1
-                      ? 'border border-blue-300 bg-gray-50 text-black'
-                      : 'text-black hover:text-gray-600'
-                  }`}
-                >
-                  1
-                </button>
-                
-                {/* Show pages around current page */}
-                {currentPage > 3 && (
-                  <span className="text-black">...</span>
-                )}
-                
-                {/* Middle pages */}
-                {Array.from({ length: Math.min(3, totalPages - 2) }, (_, i) => {
-                  let pageNum
-                  if (currentPage <= 3) {
-                    pageNum = i + 2
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 3 + i
-                  } else {
-                    pageNum = currentPage - 1 + i
-                  }
-                  
-                  if (pageNum > 1 && pageNum < totalPages) {
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1 rounded-md text-sm ${
-                          currentPage === pageNum
-                            ? 'border border-blue-300 bg-gray-50 text-black'
-                            : 'text-black hover:text-gray-600'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    )
-                  }
-                  return null
-                })}
-                
-                {/* Show ellipsis before last page if needed */}
-                {currentPage < totalPages - 2 && totalPages > 4 && (
-                  <span className="text-black">...</span>
-                )}
-                
-                {/* Last page (if not first page) */}
-                {totalPages > 1 && (
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    className={`px-3 py-1 rounded-md text-sm ${
-                      currentPage === totalPages
-                        ? 'border border-blue-300 bg-gray-50 text-black'
-                        : 'text-black hover:text-gray-600'
-                    }`}
-                  >
-                    {totalPages}
-                  </button>
-                )}
-              </div>
-              
-              {/* Next Button */}
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className={`text-sm ${
-                  currentPage === totalPages 
-                    ? 'text-gray-400 cursor-not-allowed' 
-                    : 'text-black hover:text-gray-600'
-                }`}
-              >
-                下一页 &gt;
-              </button>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
-      </div>
-
-      {/* 模版详情弹窗 */}
-      <TemplateDetailModal
-        open={detailModalOpen}
-        templateId={selectedTemplateId}
-        onOpenChange={setDetailModalOpen}
-      />
+      </section>
     </div>
   )
 }
